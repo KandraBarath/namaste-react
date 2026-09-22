@@ -1,48 +1,33 @@
 import RestaurantCard from "./RestaurantCard";
 import { useEffect, useState } from "react";
 import Shimmer from "./Shimmer";
+import useRestaurantData from "../utils/useRestaurantData";
+import useOnlineStatus from "../utils/useOnlineStatus";
 
 const Body = () => {
-
-    const [listofRestaurant, setListofRestaurant] = useState([]);
-    const [filteredRestaurant, setFilteredRestaurant] = useState([]);
-
     const [searchText, setSearchText] = useState("");
 
-    // Add this hook above your return statement
+   // Using the custom hook here
+   const { 
+        listofRestaurant, 
+        filteredRestaurant, 
+        setFilteredRestaurant 
+    } = useRestaurantData();
+
+// Automatically filters when searchText changes
     useEffect(() => {
-        const filtered = listofRestaurant.filter((res) => 
-          res?.info?.name.toLowerCase().includes(searchText.toLowerCase())
+        const filtered = listofRestaurant.filter((res) =>
+        res?.info?.name.toLowerCase().includes(searchText.toLowerCase())
         );
-      setFilteredRestaurant(filtered);
-    }, [searchText, listofRestaurant]); // Runs whenever searchText or the master list changes
+        setFilteredRestaurant(filtered);
+    }, [searchText, listofRestaurant, setFilteredRestaurant]);
 
-  useEffect(() => {
-        fetchData();
-    }, []);
+    const onlineStatus = useOnlineStatus();
 
-    const fetchData = async () => {
-        try {
-         const resURl = "https://namastedev.com/api/v1/listRestaurants";
-            const resData = await fetch(resURl);
-
-            const resResponse = await resData.json();
-
-            console.log("resResponse:", resResponse);
-
-            const restaurants =
-            resResponse?.data?.data?.cards[1]?.card?.card
-                ?.gridElements?.infoWithStyle?.restaurants || [];
-
-            console.log("restaurants:", restaurants);
-
-            setListofRestaurant(restaurants);
-            setFilteredRestaurant(restaurants);
-        } catch (error) {
-            console.error("Error fetching restaurants:", error);
-        }
-    };
-
+    if (onlineStatus === false) {
+        return <h1>Looks like you're offline!! Please check your internet connection</h1>
+    }
+    
     return listofRestaurant.length === 0 ? <Shimmer /> : (
         <div className="body">
             <div className="filter">
